@@ -54,3 +54,22 @@ def test_unreadable_or_absurd_salary_is_unknown_never_zero(text):
 def test_hours_per_year_is_configurable():
     r = parse_salary("$50/hour", hours_per_year=1800)
     assert r is not None and r.high == 90000
+
+
+@pytest.mark.parametrize(
+    "text,high",
+    [
+        ("$90,000 - 110,000", 110000),
+        ("$90,000 to 110,000", 110000),
+        ("$100,000 - 120,000 + 15% bonus", 120000),
+        ("$40 - 50 per hour", 104000),
+        ("$50 - 60/hr", 124800),
+        ("$100k, 4 days a week", 100000),
+        ("95k-105k, 3 days a week", 105000),
+        ("$7,000 a month", 84000),
+        ("$2,000 a week", 104000),
+    ],
+)
+def test_bare_range_ends_and_schedule_phrases(text, high):
+    r = parse_salary(text)
+    assert r is not None and r.high == pytest.approx(high)

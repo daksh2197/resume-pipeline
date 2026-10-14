@@ -13,7 +13,8 @@ bank, and it checks the reply before you use it. A reply is rejected when:
 
 What it cannot check: units (93% renewal can become "93 accounts" and still pass, because only the
 digits are compared), wording that sounds more senior than the line it came from, or a skill the
-story bank never mentions. Read the pack before you send it.
+story bank never mentions. Ordinals ("first", "third") and non-Latin numerals such as 三 are not
+checked. Read the pack before you send it.
 """
 
 from __future__ import annotations
@@ -103,13 +104,13 @@ Every number you write must appear in the story bank. Do not add any other numbe
 
 
 WORD_NUMBERS = re.compile(
-    r"(?<![A-Za-z])(?:zero|one|two|three|four|five|six|seven|eight|nine|ten|eleven|twelve|thirteen|fourteen|"
+    r"(?<![A-Za-z])(?:zero|thrice|one|two|three|four|five|six|seven|eight|nine|ten|eleven|twelve|thirteen|fourteen|"
     r"fifteen|sixteen|seventeen|eighteen|nineteen|twenty|thirty|forty|fifty|sixty|seventy|eighty|ninety|"
-    r"hundred|thousand|million|billion|half|dozen|double|doubled|triple|tripled|twice)(?![A-Za-z])"
-    r"|[\u00bc-\u00be\u2150-\u215e\u2460-\u2473]",
+    r"hundred|thousand|million|billion|half|dozen|double|doubled|triple|tripled|twice)(?:s|fold|th|ths)?(?![A-Za-z])"
+    r"|[\u00b2\u00b3\u00b9\u00bc-\u00be\u2150-\u218b\u2460-\u249b\u24ea-\u24ff\u2776-\u2793\u3220-\u3229\u3248-\u324f\u3251-\u325f\u3280-\u3289\u32b1-\u32bf]",
     re.IGNORECASE,
 )
-HEADING = re.compile(r"^\s*#{1,6}\s*(.*?)\s*#*\s*$")
+HEADING = re.compile(r"^\s*#{1,6}\s*(.*?)[\s:#]*$")
 ITEM = re.compile(r"^\s*(?:[-*\u2022]|(\d+)[.)])\s+(.+)$")
 
 
@@ -210,7 +211,7 @@ def check_pack(reply: str, bank: StoryBank) -> list[str]:
     spelled = _word_numbers(reply) - bank_words
     if spelled:
         problems.append(
-            f"The reply uses {', '.join(sorted(spelled))} as a number. Write only numbers that are "
-            "in the story bank, as digits."
+            f"The reply uses {', '.join(sorted(spelled))} as a number or a size. Remove it, or use only "
+            "figures from the story bank, written as digits."
         )
     return problems

@@ -8,7 +8,7 @@
 #
 # Replace OWNER/resume-pipeline below with wherever you keep this tool (a fork, say), and pin it to a
 # release tag you have read. This job runs that code next to your private leads, so do not follow a
-# moving branch.
+# moving branch. Create the tag first: `git tag v0.1.0 && git push origin v0.1.0` in your copy.
 #
 # GitHub pauses scheduled workflows in a repo with no activity for 60 days. Re-enable it from the
 # Actions tab if that happens.

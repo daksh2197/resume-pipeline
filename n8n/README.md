@@ -4,6 +4,8 @@
 
 **What was verified.** I imported this file into n8n 2.35.7 (installed with `npm i n8n`) on 14 October 2026 and ran it with `n8n execute --id=resumePipeline01`, starting from the manual trigger. It finished with status `success` and returned the same nine ranked leads as `ranked.csv` for the sample data, in the same order. With the data folder variable missing, the run failed with the tool's own error message, which is what you want.
 
+**Good to know.** The shortlist size is fixed at ten inside the Code node and ignores `shortlist_size` in your rubric. The schedule uses the time zone of your n8n instance.
+
 **What was not verified.** The "Every morning at 7" trigger is a standard n8n schedule node wired to the same step. I did not wait for it to fire.
 
 ## The steps

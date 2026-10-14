@@ -122,3 +122,12 @@ def test_a_bullet_that_is_only_a_citation_is_rejected(bank):
 def test_crlf_line_endings_and_odd_heading_case_pass(bank):
     crlf = GOOD.replace("\n", "\r\n").replace("## Fit", "### FIT")
     assert check_pack(crlf, bank) == []
+
+
+def test_suffixed_and_glyph_numbers_are_caught(bank):
+    for sneaky in ("A tenfold gain. ", "Hundreds of users. ", "Thrice a year. ", "Dozens of accounts. ", "² and Ⅻ. "):
+        assert any("as a number" in p for p in check_pack(reply_with(note_extra=sneaky), bank)), sneaky
+
+
+def test_a_heading_with_a_colon_is_fine(bank):
+    assert check_pack(GOOD.replace("## Fit", "## Fit:"), bank) == []

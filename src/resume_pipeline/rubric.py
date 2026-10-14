@@ -60,6 +60,9 @@ class Rubric:
     extra: dict[str, Any] = field(default_factory=dict)
 
 
+MAX_NUMBER = 1e9  # keeps sums of weights finite and printable
+
+
 def _number(value: Any, where: str, *, minimum: float = 0.0) -> float:
     if isinstance(value, bool) or not isinstance(value, (int, float)):
         raise RubricError(f"{where} must be a number, got {value!r}")
@@ -71,6 +74,8 @@ def _number(value: Any, where: str, *, minimum: float = 0.0) -> float:
         raise RubricError(f"{where} must be a finite number, got {value!r}")
     if number < minimum:
         raise RubricError(f"{where} must be {minimum:g} or more, got {value!r}")
+    if number > MAX_NUMBER:
+        raise RubricError(f"{where} must be {MAX_NUMBER:g} or less, got {value!r}")
     return number
 
 

@@ -23,7 +23,7 @@ Job alerts arrive as a list every morning. Reading every posting to find the few
 - **Any CSV layout works.** The rubric maps your column names to the fields the tool needs.
 - **The rules are a YAML file.** Title families with weights, must-haves, nice-to-haves, knockouts, a salary floor, location and remote rules, and a company whitelist that skips the salary floor.
 - **`pack` builds an application pack prompt.** From one posting and your story bank, it writes a prompt you paste into any assistant. It asks for fit with reasons, gaps stated plainly, five bullets, a note of about 120 words and three questions.
-- **`pack --check` rejects invented experience.** Every bullet must cite a story-bank line like `[S2]`, and every number in the reply, in any section, must appear in the story bank. A reply that breaks either rule is rejected with a plain message. It compares digits and number words, not units, so read the pack before you send it.
+- **`pack --check` rejects invented experience.** Every bullet must cite a story-bank line like `[S2]`, and every number in the reply, in any section, must appear in the story bank. A reply that breaks either rule is rejected with a plain message. It compares digits and number words, not units, ordinals or non-Latin numerals, so read the pack before you send it.
 
 ![The report on a phone, with the same shortlist](docs/screenshots/report-phone.png)
 

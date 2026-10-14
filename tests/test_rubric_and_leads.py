@@ -141,3 +141,8 @@ def test_windows_encoded_files_work_for_the_rubric_and_the_pack(tmp_path):
     posting = tmp_path / "p.txt"
     posting.write_bytes(b"A posting \x92s text")
     assert pack_main([str(posting), "--story-bank", str(bank), "--out", str(tmp_path / "o.md")]) == 0
+
+
+def test_absurd_weights_are_refused_so_scores_stay_finite():
+    with pytest.raises(RubricError, match="or less"):
+        parse_rubric({**BASE, "nice_to_haves": [{"name": "x", "points": 1e308}]})
