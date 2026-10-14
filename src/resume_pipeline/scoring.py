@@ -31,8 +31,11 @@ class Scored:
     rank: int | None = None  # 1 = best; None for knocked-out leads
 
 
-def _fmt(n: float) -> str:
-    return f"{n:g}"
+def fmt_number(n: float) -> str:
+    """Plain digits, never 1.5e+06. Whole numbers have no decimals; others keep up to two."""
+    if n == int(n):
+        return str(int(n))
+    return f"{n:.2f}".rstrip("0").rstrip(".")
 
 
 def _contains(haystack: str, phrase: str) -> bool:
@@ -45,8 +48,13 @@ def _first_hit(term: Term, text: str) -> str | None:
     return next((p for p in term.phrases if _contains(text, p)), None)
 
 
+_NOT_REMOTE = re.compile(r"(?<![A-Za-z])(?:not|non|no)[\s-]+remote", re.IGNORECASE)
+
+
 def _is_remote(lead: Lead) -> bool:
-    return _contains(lead.location, "remote") or _contains(lead.title, "remote")
+    """The word "remote" in the location or title, unless it is negated ("not remote", "non-remote")."""
+    text = f"{lead.location}\n{lead.title}"
+    return _contains(text, "remote") and not _NOT_REMOTE.search(text)
 
 
 def score_lead(lead: Lead, rubric: Rubric) -> Scored:
@@ -78,11 +86,11 @@ def score_lead(lead: Lead, rubric: Rubric) -> Scored:
                 lead,
                 0.0,
                 True,
-                (f"knockout: salary stated below floor ({_fmt(pay.high)} < {_fmt(rubric.salary_floor)})",),
+                (f"knockout: salary stated below floor ({fmt_number(pay.high)} < {fmt_number(rubric.salary_floor)})",),
                 tuple(incomplete),
             )
         else:
-            reasons.append(f"salary clears the floor ({_fmt(pay.high)} >= {_fmt(rubric.salary_floor)})")
+            reasons.append(f"salary clears the floor ({fmt_number(pay.high)} >= {fmt_number(rubric.salary_floor)})")
 
     # 4. Location and remote rules.
     remote = _is_remote(lead)
@@ -139,14 +147,14 @@ def score_lead(lead: Lead, rubric: Rubric) -> Scored:
     if matched:
         best = max(matched, key=lambda th: th[0].points)  # the best family counts once
         score += best[0].points
-        reasons.insert(0, f"+{_fmt(best[0].points)} title family: {best[0].name}")
+        reasons.insert(0, f"+{fmt_number(best[0].points)} title family: {best[0].name}")
     for term in rubric.nice_to_haves:
         if _first_hit(term, searchable) is not None:
             score += term.points
-            reasons.append(f"+{_fmt(term.points)} nice-to-have: {term.name}")
+            reasons.append(f"+{fmt_number(term.points)} nice-to-have: {term.name}")
     if remote and rubric.remote_points:
         score += rubric.remote_points
-        reasons.append(f"+{_fmt(rubric.remote_points)} remote")
+        reasons.append(f"+{fmt_number(rubric.remote_points)} remote")
     if not matched:
         reasons.insert(0, "+0 title family: no match")
 

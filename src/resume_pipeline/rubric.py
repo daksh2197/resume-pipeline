@@ -13,6 +13,8 @@ from typing import Any
 
 import yaml
 
+from .textio import read_text
+
 COLUMN_KEYS = ("title", "company", "location", "salary", "url", "description")
 REMOTE_MODES = ("accept", "only", "reject")
 TOP_LEVEL_KEYS = {
@@ -61,11 +63,15 @@ class Rubric:
 def _number(value: Any, where: str, *, minimum: float = 0.0) -> float:
     if isinstance(value, bool) or not isinstance(value, (int, float)):
         raise RubricError(f"{where} must be a number, got {value!r}")
-    if value != value or value in (float("inf"), float("-inf")):
+    try:
+        number = float(value)
+    except OverflowError:
+        raise RubricError(f"{where} is too large to be a sensible number") from None
+    if number != number or number in (float("inf"), float("-inf")):
         raise RubricError(f"{where} must be a finite number, got {value!r}")
-    if value < minimum:
+    if number < minimum:
         raise RubricError(f"{where} must be {minimum:g} or more, got {value!r}")
-    return float(value)
+    return number
 
 
 def _strings(value: Any, where: str) -> tuple[str, ...]:
@@ -165,7 +171,7 @@ def parse_rubric(data: Any) -> Rubric:
 
 def load_rubric(path: str | Path) -> Rubric:
     try:
-        text = Path(path).read_text(encoding="utf-8")
+        text = read_text(path)
     except OSError as err:
         raise RubricError(f"Cannot read the rubric at {path}: {err.strerror or err}") from err
     try:

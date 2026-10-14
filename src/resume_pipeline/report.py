@@ -10,7 +10,7 @@ from importlib import resources
 from urllib.parse import urlparse
 
 from .rubric import Rubric
-from .scoring import Scored
+from .scoring import Scored, fmt_number
 
 FONT_FILES = (
     ("Bricolage Grotesque", "bricolage-grotesque-latin-wght-normal.woff2"),
@@ -23,6 +23,16 @@ def _asset(name: str) -> bytes:
     return (resources.files("resume_pipeline") / "assets" / name).read_bytes()
 
 
+def font_notice() -> str:
+    """The copyright line from each font's licence file, so the report carries its own attribution."""
+    lines = []
+    for family, _ in FONT_FILES:
+        slug = family.lower().replace(" ", "-")
+        first = _asset(f"fonts/LICENSE-{slug}.txt").decode("utf-8").splitlines()[0].replace("--", "-")
+        lines.append(f"{family}: {first.strip()}")
+    return "Fonts are licensed under the SIL Open Font License 1.1 (https://openfontlicense.org).\n" + "\n".join(lines)
+
+
 def fonts_css() -> str:
     """The three brand typefaces as base64, so the report works with no network."""
     out = []
@@ -32,7 +42,7 @@ def fonts_css() -> str:
             f"@font-face{{font-family:'{family}';font-weight:100 900;font-display:swap;"
             f"src:url(data:font/woff2;base64,{data}) format('woff2');}}"
         )
-    return "\n".join(out)
+    return "/*\n" + font_notice().replace("*/", "") + "\n*/\n" + "\n".join(out)
 
 
 def safe_cell(value: object) -> str:
@@ -75,7 +85,7 @@ def ranked_csv(results: list[Scored]) -> str:
             [
                 s.rank if s.rank is not None else "",
                 "knocked out" if s.knocked_out else ("ranked on incomplete data" if s.incomplete else "ranked"),
-                "" if s.knocked_out else f"{s.score:g}",
+                "" if s.knocked_out else fmt_number(s.score),
                 safe_cell(s.lead.title),
                 safe_cell(s.lead.company),
                 safe_cell(s.lead.location),
@@ -99,7 +109,7 @@ def _row_html(s: Scored) -> str:
         badge = '<span class="tag out">knocked out</span>'
     elif s.incomplete:
         badge = f'<span class="tag warn">incomplete: {escape(", ".join(s.incomplete))}</span>'
-    score = "" if s.knocked_out else f'<span class="score">{s.score:g}</span>'
+    score = "" if s.knocked_out else f'<span class="score">{fmt_number(s.score)}</span>'
     rank = f'<span class="rank">{s.rank}</span>' if s.rank is not None else '<span class="rank">–</span>'
     reasons = "".join(f"<li>{escape(r)}</li>" for r in s.reasons)
     return (

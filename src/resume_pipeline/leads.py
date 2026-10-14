@@ -55,12 +55,12 @@ def read_leads(path: str | Path, rubric: Rubric) -> list[Lead]:
     headers = [h.strip() for h in (reader.fieldnames or [])]
     if not headers:
         raise LeadsError(f"{path} is empty: expected a header row")
-    lookup = {h.casefold(): h for h in reader.fieldnames or []}
+    lookup = {h.strip().casefold(): h for h in reader.fieldnames or []}
 
     resolved: dict[str, str | None] = {}
     for key in COLUMN_KEYS:
         header = rubric.columns.get(key)
-        resolved[key] = lookup.get(header.casefold()) if header else None
+        resolved[key] = lookup.get(header.strip().casefold()) if header else None
     if resolved["title"] is None:
         raise LeadsError(
             f"No column named {rubric.columns['title']!r} in {path}. "

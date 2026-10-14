@@ -23,7 +23,7 @@ Job alerts arrive as a list every morning. Reading every posting to find the few
 - **Any CSV layout works.** The rubric maps your column names to the fields the tool needs.
 - **The rules are a YAML file.** Title families with weights, must-haves, nice-to-haves, knockouts, a salary floor, location and remote rules, and a company whitelist that skips the salary floor.
 - **`pack` builds an application pack prompt.** From one posting and your story bank, it writes a prompt you paste into any assistant. It asks for fit with reasons, gaps stated plainly, five bullets, a note of about 120 words and three questions.
-- **`pack --check` rejects invented experience.** Every bullet must cite a story-bank line like `[S2]`, and any number in the pack must appear in the story bank. A reply that breaks either rule is rejected with a plain message.
+- **`pack --check` rejects invented experience.** Every bullet must cite a story-bank line like `[S2]`, and every number in the reply, in any section, must appear in the story bank. A reply that breaks either rule is rejected with a plain message. It compares digits and number words, not units, so read the pack before you send it.
 
 ![The report on a phone, with the same shortlist](docs/screenshots/report-phone.png)
 
@@ -46,7 +46,7 @@ must-haves         -> out if one is missing (unchecked if there is no descriptio
 points             -> best title family once + nice-to-haves + remote bonus
 ```
 
-One invented posting, scored by hand: Technical Account Manager at Tamarack Cloud, Calgary, `$105,000 - $125,000`. Title family +5, then cloud +1, SQL +1, Python +1. Total 8, and the report shows exactly those four reasons. The full walk-through is in [docs/THE-RUBRIC.md](docs/THE-RUBRIC.md).
+One invented posting, scored by hand: Technical Account Manager at Tamarack Cloud, Calgary, `$105,000 - $125,000`. Title family +5, then cloud +1, SQL +1, Python +1. Total 8. The report lists seven reason lines for it: the four that earn points, plus the salary, location and must-have checks it passed. The full walk-through is in [docs/THE-RUBRIC.md](docs/THE-RUBRIC.md).
 
 ![A lead scored on incomplete data, with the reasons listed](docs/screenshots/incomplete-and-knocked-out.png)
 
@@ -80,6 +80,8 @@ uv run pack --story-bank story-bank.md --check reply.md  # passes, or says what 
 
 `samples/sample-reply.md` is a hand-written reply that passes the check. Your real `jobs.csv`, `rubric.yaml`, `story-bank.md`, `posting.txt` and packs are ignored by git (see `.gitignore`). Only `samples/` is committed, and everything in it is invented.
 
+An n8n workflow in [`n8n/`](n8n/) runs `screen` and returns the top ten. I imported it into n8n 2.35.7 and ran it. The details, and what I did not check, are in [n8n/README.md](n8n/README.md).
+
 A daily schedule without any extra tool: [`examples/daily.yml`](examples/daily.yml) is a GitHub Actions workflow for a private repo that holds your leads.
 
 ## How it's built
@@ -104,11 +106,14 @@ src/resume_pipeline/
   scoring.py    the checks above. Start here.
   report.py     ranked.csv and the HTML report
   pack.py       builds the application-pack prompt and checks a reply
+  textio.py     reads text files saved as UTF-8 or old Windows encodings
   cli.py        the two commands
   assets/       brand.css and the three typefaces (SIL Open Font License)
 samples/        invented leads, rubric, story bank, posting and reply
 tests/          the tests, plus tests/golden/report.html
+scripts/        regen_golden.py, for when you change the report on purpose
 docs/           THE-RUBRIC.md, CTO-NOTES.md, BUSINESS.md, screenshots
+n8n/             one workflow, run in a real n8n instance
 examples/daily.yml            the same schedule on GitHub Actions
 .github/workflows/ship.yml    lint, test, build, then deploy the sample report
 ```
@@ -129,7 +134,7 @@ I build with Claude as my pair programmer. I bring the problem and decide what t
 ## What's next
 
 - [ ] `pack --ollama <model>`: call a local model directly. Left out because I could not run and verify it in the environment this was built in.
-- [ ] An n8n workflow pack that runs `screen` on a schedule. Left out for the same reason: no workflow ships until I have imported and run it in a real n8n instance.
+- [ ] Let the n8n schedule trigger fire on its own once. I ran the workflow from the manual trigger only.
 - [ ] A demo GIF. The README uses screenshots of the real report for now.
 - [ ] Check `examples/daily.yml` on a real schedule. Its commands run locally. The workflow itself has not run on GitHub yet.
 - [ ] Rubric packs per role family

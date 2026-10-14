@@ -116,3 +116,28 @@ def test_a_huge_field_is_cut_not_crashed_on(tmp_path):
     f = tmp_path / "big.csv"
     f.write_text("Title\n" + "x" * 50_000 + "\n")
     assert len(read_leads(f, r)[0].title) == 20_000
+
+
+def test_a_huge_number_in_the_rubric_is_refused_not_a_traceback():
+    with pytest.raises(RubricError, match="too large"):
+        parse_rubric({**BASE, "salary": {"hours_per_year": 10**400}})
+
+
+def test_headers_with_stray_spaces_still_match(tmp_path):
+    f = tmp_path / "s.csv"
+    f.write_text("Job Title ,Employer\nA,B\n")
+    (item,) = read_leads(f, parse_rubric({"columns": {"title": "Job Title", "company": "Employer"}}))
+    assert item.title == "A"
+
+
+def test_windows_encoded_files_work_for_the_rubric_and_the_pack(tmp_path):
+    rub = tmp_path / "r.yaml"
+    rub.write_bytes("columns: {title: 'Intitul\xe9'}\n".encode("latin-1"))
+    assert load_rubric(rub).columns["title"] == "Intitul\u00e9"
+    from resume_pipeline.cli import pack_main
+
+    bank = tmp_path / "b.md"
+    bank.write_bytes("S1: Fixed 3 bugs \x96 quickly.\n".encode("latin-1"))
+    posting = tmp_path / "p.txt"
+    posting.write_bytes(b"A posting \x92s text")
+    assert pack_main([str(posting), "--story-bank", str(bank), "--out", str(tmp_path / "o.md")]) == 0

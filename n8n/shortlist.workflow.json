@@ -1,0 +1,103 @@
+{
+  "id": "resumePipeline01",
+  "name": "Résumé Pipeline: daily shortlist",
+  "nodes": [
+    {
+      "parameters": {},
+      "id": "11111111-0000-4000-8000-000000000001",
+      "name": "Run it now",
+      "type": "n8n-nodes-base.manualTrigger",
+      "typeVersion": 1,
+      "position": [
+        0,
+        0
+      ]
+    },
+    {
+      "parameters": {
+        "rule": {
+          "interval": [
+            {
+              "field": "days",
+              "daysInterval": 1,
+              "triggerAtHour": 7
+            }
+          ]
+        }
+      },
+      "id": "11111111-0000-4000-8000-000000000002",
+      "name": "Every morning at 7",
+      "type": "n8n-nodes-base.scheduleTrigger",
+      "typeVersion": 1.2,
+      "position": [
+        0,
+        200
+      ]
+    },
+    {
+      "parameters": {
+        "command": "set -e\ncd \"$RESUME_PIPELINE_DATA\"\nuv run --project \"$RESUME_PIPELINE_TOOL\" screen jobs.csv --rubric rubric.yaml --out out > /dev/null\ncat out/ranked.csv"
+      },
+      "id": "11111111-0000-4000-8000-000000000003",
+      "name": "Run screen",
+      "type": "n8n-nodes-base.executeCommand",
+      "typeVersion": 1,
+      "position": [
+        320,
+        100
+      ]
+    },
+    {
+      "parameters": {
+        "jsCode": "// Turn ranked.csv (the stdout of the last step) into one item per shortlisted lead.\nconst text = $input.first().json.stdout;\nconst rows = [];\nlet row = [], field = '', quoted = false;\nfor (let i = 0; i < text.length; i++) {\n  const c = text[i];\n  if (quoted) {\n    if (c === '\"' && text[i + 1] === '\"') { field += '\"'; i++; }\n    else if (c === '\"') quoted = false;\n    else field += c;\n  } else if (c === '\"') quoted = true;\n  else if (c === ',') { row.push(field); field = ''; }\n  else if (c === '\\n') { row.push(field); rows.push(row); row = []; field = ''; }\n  else if (c !== '\\r') field += c;\n}\nif (field !== '' || row.length) { row.push(field); rows.push(row); }\nconst head = rows.shift();\nconst records = rows.filter(r => r.length === head.length).map(r => Object.fromEntries(head.map((h, i) => [h, r[i]])));\nconst top = records.filter(r => r.status !== 'knocked out').slice(0, 10);\nreturn top.map(r => ({ json: { rank: Number(r.rank), score: Number(r.score), title: r.title, company: r.company, url: r.url, status: r.status, incomplete: r.incomplete, reasons: r.reasons } }));"
+      },
+      "id": "11111111-0000-4000-8000-000000000004",
+      "name": "Keep the shortlist",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        640,
+        100
+      ]
+    }
+  ],
+  "connections": {
+    "Run it now": {
+      "main": [
+        [
+          {
+            "node": "Run screen",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Every morning at 7": {
+      "main": [
+        [
+          {
+            "node": "Run screen",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Run screen": {
+      "main": [
+        [
+          {
+            "node": "Keep the shortlist",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "settings": {
+    "executionOrder": "v1"
+  },
+  "active": false
+}

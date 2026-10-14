@@ -15,11 +15,18 @@ from resume_pipeline.salary import parse_salary
         ("$40 - $50 per hour", 83200, 104000),
         ("$7,000 per month", 84000, 84000),
         ("CAD 120000", 120000, 120000),
+        ("3 openings, $90k-$110k", 90000, 110000),
+        ("$80,000 plus 401k", 80000, 80000),
+        ("$2,000 per week", 104000, 104000),
+        ("$3,500 biweekly", 91000, 91000),
+        ("$7k/mth", 84000, 84000),
+        ("$66.32-$89.38per hour", 137945.6, 185910.4),
+        ("2 positions $60k and $120k", 60000, 120000),
     ],
 )
 def test_salary_text_becomes_a_yearly_range(text, low, high):
     r = parse_salary(text)
-    assert r is not None and (r.low, r.high) == (low, high)
+    assert r is not None and (r.low, r.high) == pytest.approx((low, high))
 
 
 @pytest.mark.parametrize(

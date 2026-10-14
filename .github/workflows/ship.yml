@@ -21,7 +21,7 @@ permissions:
 
 concurrency:
   group: ship-${{ github.ref }}
-  cancel-in-progress: true
+  cancel-in-progress: ${{ github.event_name == 'pull_request' }}  # never cancel a deploy half way
 
 jobs:
   test:

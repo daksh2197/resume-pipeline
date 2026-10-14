@@ -145,3 +145,17 @@ def test_adding_a_nice_to_have_never_lowers_a_score():
         after = score_lead(item, rubric(nice_to_haves=[*existing, extra]))
         assert after.score >= before.score
         assert after.knocked_out == before.knocked_out
+
+
+def test_not_remote_is_not_remote():
+    only = rubric(location={"remote": "only"})
+    for text in ("Not remote", "non-remote, Calgary", "No remote work"):
+        assert score_lead(lead(location=text), only).knocked_out
+
+
+def test_big_numbers_never_print_in_exponent_form():
+    r = rubric(salary={"floor": 1_500_000})
+    s = score_lead(lead(salary="$1,234,567"), r)
+    assert s.knocked_out and "e+" not in s.reasons[0] and "1234567 < 1500000" in s.reasons[0]
+    heavy = rubric(nice_to_haves=[{"name": "x", "match": ["cloud"], "points": 1e7}])
+    assert score_lead(lead(), heavy).reasons[-1] == "+10000000 nice-to-have: x"

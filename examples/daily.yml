@@ -6,7 +6,12 @@
 # Put your real leads, rubric and story bank in a private repo only. This public repo
 # deliberately ignores them (see .gitignore).
 #
-# Replace OWNER/resume-pipeline below with wherever you keep this tool (a fork, say).
+# Replace OWNER/resume-pipeline below with wherever you keep this tool (a fork, say), and pin it to a
+# release tag you have read. This job runs that code next to your private leads, so do not follow a
+# moving branch.
+#
+# GitHub pauses scheduled workflows in a repo with no activity for 60 days. Re-enable it from the
+# Actions tab if that happens.
 
 name: Daily shortlist
 
@@ -27,7 +32,7 @@ jobs:
       - uses: astral-sh/setup-uv@v7
 
       - name: Get the screening tool
-        run: git clone --depth 1 https://github.com/OWNER/resume-pipeline.git tool
+        run: git clone --depth 1 --branch v0.1.0 https://github.com/OWNER/resume-pipeline.git tool
 
       - name: Rank today's leads
         run: uv run --project tool screen leads/jobs.csv --rubric rubric.yaml --out out --title "Today's shortlist"

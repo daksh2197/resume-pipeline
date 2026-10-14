@@ -12,6 +12,7 @@ from .pack import PackError, build_prompt, check_pack, parse_story_bank
 from .report import build_report, ranked_csv
 from .rubric import RubricError, load_rubric
 from .scoring import score_all
+from .textio import read_text
 
 
 def _fail(message: str) -> int:
@@ -67,7 +68,7 @@ def pack_main(argv: list[str] | None = None) -> int:
     args = p.parse_args(argv)
 
     try:
-        bank = parse_story_bank(Path(args.story_bank).read_text(encoding="utf-8-sig"))
+        bank = parse_story_bank(read_text(args.story_bank))
     except OSError as err:
         return _fail(f"cannot read the story bank: {err.strerror or err}")
     except PackError as err:
@@ -75,7 +76,7 @@ def pack_main(argv: list[str] | None = None) -> int:
 
     if args.check:
         try:
-            reply = Path(args.check).read_text(encoding="utf-8-sig")
+            reply = read_text(args.check)
         except OSError as err:
             return _fail(f"cannot read the reply: {err.strerror or err}")
         problems = check_pack(reply, bank)
@@ -90,7 +91,7 @@ def pack_main(argv: list[str] | None = None) -> int:
     if not args.posting:
         return _fail("give a posting file to build a prompt, or use --check REPLY")
     try:
-        posting = Path(args.posting).read_text(encoding="utf-8-sig")
+        posting = read_text(args.posting)
         prompt = build_prompt(posting, bank)
         Path(args.out).write_text(prompt, encoding="utf-8")
     except OSError as err:

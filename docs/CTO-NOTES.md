@@ -29,7 +29,7 @@ A pipeline is a chain of steps where each step takes one thing in and gives one 
 
 The rules (what counts, what disqualifies, what the salary floor is) sit in `rubric.yaml`. If a rule is in the code, only a programmer can change it. If it is in a file, the person who owns the job search can change it and run it again in a second.
 
-- **See it:** [`src/resume_pipeline/cli.py`](../src/resume_pipeline/cli.py) is the whole chain in about thirty lines. The rubric is [`samples/rubric.yaml`](../samples/rubric.yaml).
+- **See it:** [`src/resume_pipeline/cli.py`](../src/resume_pipeline/cli.py) is the whole chain: two short commands that call the steps above in order. The rubric is [`samples/rubric.yaml`](../samples/rubric.yaml).
 - **Say it:** "The rules are data, the steps are tiny, so I change my search by editing a text file and I can test every step alone."
 
 ### Pure functions
@@ -82,7 +82,7 @@ The application pack must never invent experience. That rule is not in the promp
 | The prompt for the application pack | `build_prompt` in `pack.py` |
 | What the pack checker rejects | `check_pack` in `pack.py` |
 | What happens on every push | `.github/workflows/ship.yml` |
-| The daily schedule example | `examples/daily.yml` |
+| The daily schedule example | `examples/daily.yml` (GitHub Actions) or `n8n/shortlist.workflow.json` |
 
 ## 4. When something breaks
 

@@ -2,6 +2,7 @@ import pytest
 
 from resume_pipeline.pack import (
     PackError,
+    _reply_numbers,
     build_prompt,
     check_pack,
     numbers_in,
@@ -48,13 +49,13 @@ def test_a_bullet_with_an_invented_number_is_rejected(bank):
     bad = GOOD.replace("12 enterprise accounts, with a 93%", "40 enterprise accounts, with a 93%")
     problems = check_pack(bad, bank)
     assert any("Bullet 1 has 40" in p for p in problems)
-    assert any("number 40 is not in the story bank" in p for p in problems)
+    assert any("number 40, which is not in the story bank" in p for p in problems)
 
 
 def test_an_invented_number_in_the_note_is_rejected(bank):
     bad = GOOD.replace("Hello. I am applying", "Hello. With 25 years behind me, I am applying")
     problems = check_pack(bad, bank)
-    assert any(p.startswith("Note: number 25") for p in problems)
+    assert any("number 25, which is not in the story bank" in p for p in problems)
 
 
 def test_a_number_in_the_bank_but_not_in_the_cited_line_is_rejected(bank):
@@ -83,4 +84,41 @@ def test_wrong_counts_and_missing_sections_are_reported(bank):
 def test_numbers_are_compared_without_commas_percent_signs_or_citations():
     assert numbers_in("2,000 users, 93% renewal, $2.7M, [S12]") == {"2000", "93", "2.7"}
     assert numbers_in("") == set()
-    assert numbers_in("1. First question\n2) Second, about 7 things") == {"7"}
+    assert _reply_numbers("1. First question\n2) Second, about 7 things\n77. odd") == {"7", "77"}
+
+
+def reply_with(extra_before="", extra_after="", note_extra=""):
+    return extra_before + GOOD.replace("## Note\n", "## Note\n" + note_extra) + extra_after
+
+
+def test_a_number_hidden_outside_the_five_sections_is_still_caught(bank):
+    for sneaky in ("Here are 7 tips first.\n\n", "## Salary\nI want 150000.\n\n"):
+        assert any(
+            "not in the story bank" in p or "Unexpected heading" in p for p in check_pack(reply_with(sneaky), bank)
+        )
+    assert any(
+        "appears twice" in p for p in check_pack(reply_with(extra_after="\n## Note\nI led 900 engineers.\n"), bank)
+    )
+    assert any("number 77" in p for p in check_pack(reply_with(extra_before="77. That was it.\n"), bank))
+
+
+def test_a_fake_citation_anywhere_is_caught(bank):
+    problems = check_pack(GOOD.replace("Strong fit on", "[S777] Strong fit on"), bank)
+    assert any("cites S777" in p for p in problems)
+
+
+def test_number_words_and_glyphs_are_caught_unless_the_bank_uses_them(bank):
+    for sneaky in ("I managed twelve accounts. ", "About half of them. ", "A \u00bd share. "):
+        assert any("as a number" in p for p in check_pack(reply_with(note_extra=sneaky), bank))
+    with_word = parse_story_bank(BANK_TEXT + "S6: Cut costs by half.\n")
+    assert not any("as a number" in p for p in check_pack(reply_with(note_extra="Costs fell by half. "), with_word))
+
+
+def test_a_bullet_that_is_only_a_citation_is_rejected(bank):
+    bad = GOOD.replace("- Technical contact for 12 enterprise accounts, with a 93% renewal rate [S1]", "- [S1]")
+    assert any("only a citation" in p for p in check_pack(bad, bank))
+
+
+def test_crlf_line_endings_and_odd_heading_case_pass(bank):
+    crlf = GOOD.replace("\n", "\r\n").replace("## Fit", "### FIT")
+    assert check_pack(crlf, bank) == []

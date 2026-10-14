@@ -131,3 +131,17 @@ def test_pack_builds_a_prompt_and_checks_a_reply(tmp_path, capsys):
     assert pack_main(["--story-bank", "samples/story-bank.md", "--check", str(bad)]) == 1
     assert "Pack rejected" in capsys.readouterr().err
     assert pack_main(["--story-bank", "samples/story-bank.md"]) == 2
+
+
+def test_the_n8n_workflow_is_wired_end_to_end():
+    import json
+
+    flow = json.loads(Path("n8n/shortlist.workflow.json").read_text(encoding="utf-8"))
+    names = {n["name"] for n in flow["nodes"]}
+    assert len(names) == len(flow["nodes"])
+    for source, wiring in flow["connections"].items():
+        assert source in names
+        for branch in wiring["main"]:
+            assert all(link["node"] in names for link in branch)
+    command = next(n for n in flow["nodes"] if n["name"] == "Run screen")["parameters"]["command"]
+    assert "screen jobs.csv --rubric rubric.yaml" in command

@@ -23,10 +23,12 @@ Leads are ranked by score, highest first. Equal scores keep the order they had i
 | `98k-118k` or `90-110k` | 98,000 to 118,000, and 90,000 to 110,000 |
 | `$22/hour` or `$40 - $50 per hour` | multiplied by `salary.hours_per_year` (2,080 unless you change it) |
 | `$7,000 per month` | multiplied by 12 |
+| `$2,000 per week` or `$3,500 biweekly` | multiplied by 52 or 26 |
 | `Competitive`, `DOE`, blank | unknown |
-| a number under 1,000 a year, or over 10,000,000 | unknown, because it is more likely a typo than a salary |
+| a bare number with no `$`, `k` or unit under 10,000 (like `2024-2025`), or any yearly figure under 1,000 or over 10,000,000 | unknown, because it is more likely a year or a typo than a salary |
+| three or more salary figures, like three levels at three pay rates | unknown, because the top of the range is ambiguous |
 
-Only the first two numbers in the text are used. If a lead lists three salaries for three levels, check it yourself.
+When the text has any figure with a `$` or a `k`/`m`, only those figures count, so `3 openings, $90k-$110k` reads as 90,000 to 110,000. `401k` is ignored. A lead with two separate salaries, like `$60k and $120k`, is read as the range between them, so check it yourself.
 
 ## One posting, scored by hand
 
@@ -45,7 +47,7 @@ From `samples/jobs.csv`, row 1 (invented): Technical Account Manager at Tamarack
 | Nice-to-have `live data`, `presentations` | neither appears | 0 |
 | **Total** | | **8** |
 
-"customer success" appears in the description. It earns nothing, because title families are matched against the title only. The sample run gives this lead 8 and the report lists exactly the reasons above.
+"customer success" appears in the description. It earns nothing, because title families are matched against the title only. The sample run gives this lead 8. Its report entry has seven reason lines: the four that earn points, and the salary, location and must-have checks it passed.
 
 ## Tuning it
 
@@ -59,6 +61,7 @@ Ranking quality depends on this file. A rubric that is too loose puts everything
 Things worth knowing when you tune:
 
 - **Weights are relative.** A title family worth 5 beside nice-to-haves worth 1 means a good title beats four small matches. Change the ratio and the order changes.
+- **Remote means the word.** "Remote" in the location or title counts, unless it is negated ("not remote", "non-remote").
 - **A knockout is a strong word.** `unpaid` also knocks out "unpaid leave policy". If that bites, narrow the phrase.
 - **Incomplete leads are a lower bound.** A lead marked incomplete could rank higher or lower once you read the posting. The report counts them so you remember.
 - **A whitelist only waives the salary floor.** A whitelisted company still has to pass knockouts, location and must-haves.

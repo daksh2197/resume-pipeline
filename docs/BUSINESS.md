@@ -6,7 +6,7 @@ No market-size numbers here. I haven't measured a market, so I'm not going to ma
 
 ## Who it's for
 
-People who get job leads as a CSV or spreadsheet export and want a shortlist with reasons. It is built for one person first: me, on a morning with forty leads and two hours.
+People who get job leads as a CSV or spreadsheet export and want a shortlist with reasons. It is built first for my own job search.
 
 The moment it's for: the list has arrived, most of it is noise, and the few worth an hour each are somewhere in there.
 
@@ -20,17 +20,17 @@ The `screen` command, the report, the `pack` prompt builder and the guardrail. A
 
 A rubric is the hard part for a new user. Starting from a blank YAML file is slow. A pack would be a tuned rubric plus a short guide for one kind of search: customer success, data analyst, solutions engineering, trades, and so on.
 
-- **Price to test:** a one-off download at a low price.
+- **Price to test:** a one-off download at a low price, set after the waitlist shows interest.
 - **What has to be true:** people would rather buy a starting point than write one in an afternoon.
 - **Cost to deliver:** near zero. It's a file and a page of advice.
 
 ### 2. Done-for-you setup
 
-I sit with someone, build their rubric from jobs they liked and hated, and set up the daily schedule in their own private repo.
+Someone builds a job seeker's rubric from jobs they liked and hated, and sets up the daily schedule in their own private repo.
 
-- **Price to test:** a fixed fee for one session.
+- **Price to test:** a small fixed fee for one session.
 - **What has to be true:** people who are comfortable pasting a CSV are not always comfortable with YAML and a command line.
-- **Cost to deliver:** my time. It does not scale, which is fine for a test.
+- **Cost to deliver:** a person's time. It does not scale, which is fine for a test.
 
 ## What it costs to run
 
