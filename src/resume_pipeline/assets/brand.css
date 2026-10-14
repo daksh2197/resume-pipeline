@@ -1,0 +1,25 @@
+/*
+ * Night pit-lane: the dakshdua.ca palette.
+ * Copied unchanged from the pattern repo (Mol-Bhav Meter).
+ */
+
+:root {
+  --ground: #111214;
+  --panel: #1a1c20;
+  --panel-2: #22252a;
+  --line: rgba(237, 232, 221, 0.12);
+  --line-2: rgba(237, 232, 221, 0.22);
+  --chalk: #ede8dd;
+  --muted: #a9a498;
+  --signal: #ff5a1f;
+  --signal-ink: #120a05;
+  --go: #3ddc84;
+  --purple: #b794ff;
+  --radius-s: 8px;
+  --radius-m: 14px;
+  --radius-l: 22px;
+  --display: 'Bricolage Grotesque', ui-sans-serif, system-ui, sans-serif;
+  --body: 'Geist', ui-sans-serif, system-ui, -apple-system, 'Segoe UI', sans-serif;
+  --mono: 'Geist Mono', ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
+  color-scheme: dark;
+}

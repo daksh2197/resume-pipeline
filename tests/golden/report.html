@@ -1,0 +1,76 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Today&#x27;s shortlist</title>
+<style>
+
+/*
+ * Night pit-lane: the dakshdua.ca palette.
+ * Copied unchanged from the pattern repo (Mol-Bhav Meter).
+ */
+
+:root {
+  --ground: #111214;
+  --panel: #1a1c20;
+  --panel-2: #22252a;
+  --line: rgba(237, 232, 221, 0.12);
+  --line-2: rgba(237, 232, 221, 0.22);
+  --chalk: #ede8dd;
+  --muted: #a9a498;
+  --signal: #ff5a1f;
+  --signal-ink: #120a05;
+  --go: #3ddc84;
+  --purple: #b794ff;
+  --radius-s: 8px;
+  --radius-m: 14px;
+  --radius-l: 22px;
+  --display: 'Bricolage Grotesque', ui-sans-serif, system-ui, sans-serif;
+  --body: 'Geist', ui-sans-serif, system-ui, -apple-system, 'Segoe UI', sans-serif;
+  --mono: 'Geist Mono', ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
+  color-scheme: dark;
+}
+
+*{box-sizing:border-box}
+body{margin:0;background:var(--ground);color:var(--chalk);font-family:var(--body);line-height:1.5}
+header{display:flex;align-items:center;gap:12px;padding:16px;border-bottom:1px solid var(--line)}
+header a{display:flex;align-items:center;gap:12px;color:var(--chalk);text-decoration:none}
+.tile{display:grid;place-items:center;width:36px;height:36px;border-radius:var(--radius-s);
+background:var(--signal);color:var(--signal-ink);font-family:var(--display);font-weight:800}
+main{max-width:860px;margin:0 auto;padding:24px 16px 64px}
+h1{font-family:var(--display);font-size:clamp(1.9rem,6vw,3rem);line-height:1.05;margin:0 0 8px}
+.sub{color:var(--muted);margin:0 0 24px}
+h2{font-family:var(--display);font-size:1.4rem;margin:32px 0 8px}
+h2 span{font-family:var(--mono);font-size:.9rem;color:var(--muted);font-weight:400}
+ol{list-style:none;margin:0;padding:0;display:grid;gap:12px}
+.lead{background:var(--panel);border:1px solid var(--line-2);border-radius:var(--radius-m);padding:14px 16px}
+.lead.dead{opacity:.85}
+.top{display:flex;gap:12px;align-items:flex-start}
+.who{flex:1;min-width:0}
+h3{margin:0;font-size:1.05rem;font-weight:600;overflow-wrap:anywhere}
+h3 a{color:var(--chalk);text-decoration-color:var(--signal);text-underline-offset:3px}
+a:focus-visible{outline:3px solid var(--signal);outline-offset:3px}
+.meta{margin:2px 0 0;color:var(--muted);font-size:.9rem;overflow-wrap:anywhere}
+.rank{font-family:var(--mono);color:var(--muted);min-width:1.6em}
+.score{font-family:var(--display);font-weight:800;font-size:1.6rem;color:var(--go)}
+.tag{display:inline-block;margin-top:8px;font-family:var(--mono);font-size:.78rem;padding:2px 8px;
+border-radius:99px;border:1px solid var(--line-2)}
+.tag.out{color:var(--muted)}.tag.warn{color:var(--signal);border-color:var(--signal)}
+.why{margin:8px 0 0;padding-left:18px;color:var(--muted);font-size:.9rem;overflow-wrap:anywhere}
+.note,.empty{color:var(--muted)}
+footer{color:var(--muted);font-size:.85rem;border-top:1px solid var(--line);padding:16px;text-align:center}
+footer a{color:var(--chalk)}
+@media (prefers-reduced-motion:reduce){*{animation:none!important;transition:none!important}}
+</style>
+</head>
+<body>
+<header><a href="https://dakshdua.ca"><span class="tile" aria-hidden="true">DD</span><span>dakshdua.ca</span></a></header>
+<main>
+<h1>Today&#x27;s shortlist</h1>
+<p class="sub">20 leads read. 9 ranked, 11 knocked out. Scores come from the rubric, not a model. Rank depends on how well the rubric is tuned.</p>
+<section><h2>Shortlist <span>9</span></h2><p class="note">3 of 9 ranked leads were scored on incomplete data (a missing salary, location or description). They are marked, and their true rank could be higher or lower.</p><ol><li class="lead"><div class="top"><span class="rank">1</span><div class="who"><h3><a href="https://example.com/jobs/107" rel="noopener noreferrer">Telemetry Software Engineer</a></h3><p class="meta">Redline Dynamics · Remote · $110,000 - $135,000</p></div><span class="score">10</span></div><ul class="why"><li>+4 title family: telemetry</li><li>salary clears the floor (135000 &gt;= 90000)</li><li>must-have present: cloud or data</li><li>+1 nice-to-have: cloud</li><li>+1 nice-to-have: sql</li><li>+1 nice-to-have: python</li><li>+2 nice-to-have: live data</li><li>+1 remote</li></ul></li><li class="lead"><div class="top"><span class="rank">2</span><div class="who"><h3><a href="https://example.com/jobs/101" rel="noopener noreferrer">Technical Account Manager</a></h3><p class="meta">Tamarack Cloud · Calgary, AB · $105,000 - $125,000</p></div><span class="score">8</span></div><ul class="why"><li>+5 title family: technical account manager</li><li>salary clears the floor (125000 &gt;= 90000)</li><li>location ok: Calgary, AB</li><li>must-have present: cloud or data</li><li>+1 nice-to-have: cloud</li><li>+1 nice-to-have: sql</li><li>+1 nice-to-have: python</li></ul></li><li class="lead"><div class="top"><span class="rank">3</span><div class="who"><h3><a href="https://example.com/jobs/110" rel="noopener noreferrer">Technical Account Manager</a></h3><p class="meta">Quarry Cloud (whitelist sample) · Calgary, AB · $80,000 - $90,000</p></div><span class="score">8</span></div><ul class="why"><li>+5 title family: technical account manager</li><li>salary floor waived: company is on the whitelist</li><li>location ok: Calgary, AB</li><li>must-have present: cloud or data</li><li>+1 nice-to-have: cloud</li><li>+1 nice-to-have: sql</li><li>+1 nice-to-have: python</li></ul></li><li class="lead"><div class="top"><span class="rank">4</span><div class="who"><h3><a href="https://example.com/jobs/102" rel="noopener noreferrer">Senior Customer Success Manager</a></h3><p class="meta">Pinewood Data · Remote (Canada) · $98k-118k</p></div><span class="score">5.5</span></div><ul class="why"><li>+3 title family: customer success</li><li>salary clears the floor (118000 &gt;= 90000)</li><li>must-have present: cloud or data</li><li>+1 nice-to-have: cloud</li><li>+0.5 nice-to-have: presentations</li><li>+1 remote</li></ul></li><li class="lead"><div class="top"><span class="rank">5</span><div class="who"><h3><a href="https://example.com/jobs/113" rel="noopener noreferrer">Customer Solutions Manager</a></h3><p class="meta">Granite Peak · Calgary, AB · $100,000 - $115,000</p></div><span class="score">5.5</span></div><ul class="why"><li>+3 title family: customer success</li><li>salary clears the floor (115000 &gt;= 90000)</li><li>location ok: Calgary, AB</li><li>must-have present: cloud or data</li><li>+1 nice-to-have: cloud</li><li>+1 nice-to-have: sql</li><li>+0.5 nice-to-have: presentations</li></ul></li><li class="lead"><div class="top"><span class="rank">6</span><div class="who"><h3><a href="https://example.com/jobs/116" rel="noopener noreferrer">Technical Program Manager</a></h3><p class="meta">Driftwood AI · Remote · $130,000 - $150,000</p></div><span class="score">5.5</span></div><ul class="why"><li>+2 title family: data</li><li>salary clears the floor (150000 &gt;= 90000)</li><li>must-have present: cloud or data</li><li>+1 nice-to-have: cloud</li><li>+1 nice-to-have: sql</li><li>+0.5 nice-to-have: presentations</li><li>+1 remote</li></ul></li><li class="lead"><div class="top"><span class="rank">7</span><div class="who"><h3><a href="https://example.com/jobs/103" rel="noopener noreferrer">Solutions Engineer</a></h3><p class="meta">Larkspur Systems · Calgary, AB</p></div><span class="score">5</span></div><span class="tag warn">incomplete: salary</span><ul class="why"><li>+3 title family: solutions</li><li>salary unknown: not checked against the floor</li><li>location ok: Calgary, AB</li><li>must-have present: cloud or data</li><li>+1 nice-to-have: cloud</li><li>+1 nice-to-have: sql</li></ul></li><li class="lead"><div class="top"><span class="rank">8</span><div class="who"><h3><a href="https://example.com/jobs/115" rel="noopener noreferrer">Technical Account Manager</a></h3><p class="meta">Silvertip Software · Calgary, AB</p></div><span class="score">5</span></div><span class="tag warn">incomplete: salary, description</span><ul class="why"><li>+5 title family: technical account manager</li><li>salary unknown: not checked against the floor</li><li>location ok: Calgary, AB</li><li>must-have not checked (no description): cloud or data</li></ul></li><li class="lead"><div class="top"><span class="rank">9</span><div class="who"><h3><a href="https://example.com/jobs/111" rel="noopener noreferrer">Product Support Engineer</a></h3><p class="meta">Juniper Hill · Calgary, AB · Competitive</p></div><span class="score">2</span></div><span class="tag warn">incomplete: salary</span><ul class="why"><li>+0 title family: no match</li><li>salary unknown: not checked against the floor</li><li>location ok: Calgary, AB</li><li>must-have present: cloud or data</li><li>+1 nice-to-have: cloud</li><li>+1 nice-to-have: sql</li></ul></li></ol></section><section><h2>Knocked out <span>11</span></h2><ol><li class="lead dead"><div class="top"><span class="rank">–</span><div class="who"><h3><a href="https://example.com/jobs/104" rel="noopener noreferrer">Data Analyst</a></h3><p class="meta">Cedar Ridge Analytics · Edmonton, AB · $72,000</p></div></div><span class="tag out">knocked out</span><ul class="why"><li>knockout: salary stated below floor (72000 &lt; 90000)</li></ul></li><li class="lead dead"><div class="top"><span class="rank">–</span><div class="who"><h3><a href="https://example.com/jobs/105" rel="noopener noreferrer">Technical Account Manager</a></h3><p class="meta">Bluebird Networks · Vancouver, BC · $140,000 - $160,000</p></div></div><span class="tag out">knocked out</span><ul class="why"><li>knockout: contains security clearance</li></ul></li><li class="lead dead"><div class="top"><span class="rank">–</span><div class="who"><h3><a href="https://example.com/jobs/106" rel="noopener noreferrer">Software Developer (C++/Qt)</a></h3><p class="meta">Marlin Instruments · Halifax, NS · $85,000 - $100,000</p></div></div><span class="tag out">knocked out</span><ul class="why"><li>knockout: location Halifax, NS is not in the allowed list</li></ul></li><li class="lead dead"><div class="top"><span class="rank">–</span><div class="who"><h3><a href="https://example.com/jobs/108" rel="noopener noreferrer">Customer Success Associate</a></h3><p class="meta">Hollis Software · Calgary, AB · $22/hour</p></div></div><span class="tag out">knocked out</span><ul class="why"><li>knockout: salary stated below floor (45760 &lt; 90000)</li></ul></li><li class="lead dead"><div class="top"><span class="rank">–</span><div class="who"><h3><a href="https://example.com/jobs/109" rel="noopener noreferrer">Account Executive</a></h3><p class="meta">Fenwick Tools · Calgary, AB · $90,000 - $110,000</p></div></div><span class="tag out">knocked out</span><ul class="why"><li>knockout: contains cold calling, quota-carrying</li></ul></li><li class="lead dead"><div class="top"><span class="rank">–</span><div class="who"><h3><a href="https://example.com/jobs/112" rel="noopener noreferrer">Data Engineer</a></h3><p class="meta">Osprey Labs · Remote (US only) · $125,000 - $150,000</p></div></div><span class="tag out">knocked out</span><ul class="why"><li>knockout: contains authorised to work in the United States</li></ul></li><li class="lead dead"><div class="top"><span class="rank">–</span><div class="who"><h3><a href="https://example.com/jobs/114" rel="noopener noreferrer">IT Support Specialist</a></h3><p class="meta">Westgate Services · Calgary, AB · $52,000 - $60,000</p></div></div><span class="tag out">knocked out</span><ul class="why"><li>knockout: salary stated below floor (60000 &lt; 90000)</li></ul></li><li class="lead dead"><div class="top"><span class="rank">–</span><div class="who"><h3><a href="https://example.com/jobs/117" rel="noopener noreferrer">Customer Success Manager</a></h3><p class="meta">Kestrel Health Tech · Calgary, AB · $95,000 - $105,000</p></div></div><span class="tag out">knocked out</span><ul class="why"><li>knockout: missing must-have cloud or data</li></ul></li><li class="lead dead"><div class="top"><span class="rank">–</span><div class="who"><h3><a href="https://example.com/jobs/118" rel="noopener noreferrer">Solutions Architect</a></h3><p class="meta">Alder Street · Calgary, AB · $120,000 - $145,000</p></div></div><span class="tag out">knocked out</span><ul class="why"><li>knockout: contains unpaid</li></ul></li><li class="lead dead"><div class="top"><span class="rank">–</span><div class="who"><h3><a href="https://example.com/jobs/119" rel="noopener noreferrer">Business Analyst</a></h3><p class="meta">Summit Ledger · Calgary, AB · $78,000 - $88,000</p></div></div><span class="tag out">knocked out</span><ul class="why"><li>knockout: salary stated below floor (88000 &lt; 90000)</li></ul></li><li class="lead dead"><div class="top"><span class="rank">–</span><div class="who"><h3><a href="https://example.com/jobs/120" rel="noopener noreferrer">Race Data Technician</a></h3><p class="meta">Apex Pitwall (sample) · Remote · $70,000 - $85,000</p></div></div><span class="tag out">knocked out</span><ul class="why"><li>knockout: salary stated below floor (85000 &lt; 90000)</li></ul></li></ol></section>
+</main>
+<footer>Sample data is invented. Built in Calgary by <a href="https://dakshdua.ca">Daksh Dua</a>. MIT licence.</footer>
+</body>
+</html>
