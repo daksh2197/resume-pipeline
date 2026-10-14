@@ -1,0 +1,20 @@
+.venv/
+__pycache__/
+*.pyc
+.pytest_cache/
+.ruff_cache/
+dist/
+site/
+
+# Real data stays on your machine. Only samples/ is committed.
+leads/
+jobs.csv
+ranked.csv
+report.html
+story-bank.md
+packs/
+prompt.md
+posting.txt
+rubric.yaml
+!samples/*
+!tests/**

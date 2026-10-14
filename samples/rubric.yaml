@@ -1,0 +1,67 @@
+# SAMPLE RUBRIC. Every value here is made up for the demo. Copy it and change it.
+# Tune it: run `screen`, read the reasons, then adjust weights until the order matches your gut.
+
+# Which CSV header holds which field. Headers are matched ignoring upper/lower case.
+columns:
+  title: Job Title
+  company: Employer
+  location: Where
+  salary: Pay
+  url: Link
+  description: About the role
+
+# Points for the closest title family. Only the best match counts, once.
+title_families:
+  - name: technical account manager
+    points: 5
+    match: [technical account manager, technical account management]
+  - name: customer success
+    points: 3
+    match: [customer success manager, customer solutions manager, customer success]
+  - name: solutions
+    points: 3
+    match: [solutions engineer, solutions architect]
+  - name: telemetry
+    points: 4
+    match: [telemetry, race data]
+  - name: data
+    points: 2
+    match: [data engineer, data analyst, technical program manager]
+
+# A posting that has a description but lacks one of these is knocked out.
+# With no description, the must-have is "not checked" and the lead is flagged incomplete.
+must_haves:
+  - name: cloud or data
+    match: [cloud, sql, python, data]
+
+# Each one found is worth its points.
+nice_to_haves:
+  - { name: cloud, match: [cloud], points: 1 }
+  - { name: sql, match: [sql], points: 1 }
+  - { name: python, match: [python], points: 1 }
+  - { name: live data, match: [live data, telemetry, data streams], points: 2 }
+  - { name: presentations, match: [presentations, stakeholder, executive briefings], points: 0.5 }
+
+# Any one of these anywhere in the title, company or description ends the lead.
+knockouts:
+  - cold calling
+  - security clearance
+  - unpaid
+  - quota-carrying
+  - authorised to work in the United States
+
+# Yearly figures. "$22/hour" is converted with hours_per_year. A missing salary is "unknown".
+salary:
+  floor: 90000
+  hours_per_year: 2080
+
+location:
+  allowed: [Calgary, Alberta, AB, Canada]
+  remote: accept # accept | only | reject
+  remote_points: 1
+
+# These companies skip the salary floor.
+company_whitelist:
+  - Quarry Cloud (whitelist sample)
+
+shortlist_size: 10

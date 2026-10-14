@@ -1,0 +1,5 @@
+SAMPLE POSTING (invented). Tamarack Cloud, Technical Account Manager, Calgary.
+
+You will be the technical contact for a group of enterprise customers. You will run account reviews,
+explain cloud migration options to executives, and build reports in SQL. Python scripting helps.
+You will keep a clear record of customer risks and renewals. Experience with Kubernetes is a plus.
