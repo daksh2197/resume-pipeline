@@ -1,0 +1,70 @@
+# Every push to main and every pull request runs this file on a fresh computer in GitHub's cloud.
+#
+#   1. test    - lint, run the tests, build the sample report
+#   2. deploy  - only on main, only after step 1 passed, and only when the repo is public:
+#                put the sample report on GitHub Pages
+#
+# If a test fails, nothing ships.
+#
+# Pages needs one setting, once: Settings > Pages > Source > "GitHub Actions".
+
+name: Test and ship
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: ship-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  test:
+    name: Test and build
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v7
+
+      - uses: astral-sh/setup-uv@v7
+
+      - name: Install exactly what uv.lock says
+        run: uv sync --locked
+
+      - name: Lint
+        run: |
+          uv run ruff check .
+          uv run ruff format --check .
+
+      - name: Run the tests
+        run: uv run pytest
+
+      - name: Build the sample report
+        run: |
+          uv run screen samples/jobs.csv --rubric samples/rubric.yaml --out site --sample
+          mv site/report.html site/index.html
+
+      - name: Hand the report to the deploy job
+        if: github.ref == 'refs/heads/main' && !github.event.repository.private
+        uses: actions/upload-pages-artifact@v5
+        with:
+          path: site
+
+  deploy:
+    name: Put it on the internet
+    needs: test
+    if: github.ref == 'refs/heads/main' && github.event_name != 'pull_request' && !github.event.repository.private
+    runs-on: ubuntu-latest
+    permissions:
+      pages: write
+      id-token: write
+    environment:
+      name: github-pages
+      url: ${{ steps.deployment.outputs.page_url }}
+    steps:
+      - id: deployment
+        uses: actions/deploy-pages@v5

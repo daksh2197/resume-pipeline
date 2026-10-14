@@ -1,0 +1,40 @@
+# EXAMPLE. Copy this file to .github/workflows/daily.yml in a PRIVATE repo that holds your leads.
+#
+# Each morning it ranks leads/jobs.csv against rubric.yaml and keeps the report as a build artifact
+# you can download from the run page. It never applies to anything and never emails anyone.
+#
+# Put your real leads, rubric and story bank in a private repo only. This public repo
+# deliberately ignores them (see .gitignore).
+#
+# Replace OWNER/resume-pipeline below with wherever you keep this tool (a fork, say).
+
+name: Daily shortlist
+
+on:
+  schedule:
+    - cron: "30 13 * * *" # 13:30 UTC every day. GitHub may start it a few minutes late.
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  screen:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v7 # your private repo, with leads/jobs.csv and rubric.yaml
+
+      - uses: astral-sh/setup-uv@v7
+
+      - name: Get the screening tool
+        run: git clone --depth 1 https://github.com/OWNER/resume-pipeline.git tool
+
+      - name: Rank today's leads
+        run: uv run --project tool screen leads/jobs.csv --rubric rubric.yaml --out out --title "Today's shortlist"
+
+      - name: Keep the report for a week
+        uses: actions/upload-artifact@v7
+        with:
+          name: shortlist
+          path: out
+          retention-days: 7
