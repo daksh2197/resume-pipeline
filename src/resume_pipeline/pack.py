@@ -18,7 +18,9 @@ checked. Read the pack before you send it.
 
 Numbers are matched as whole tokens, on both sides. The 4 in "L4", the 21 in "S21" or "2021", the 200 in
 "1,200" and the 5 in "3.5" never count as the number 4, 21, 200 or 5. A word that mixes letters and digits
-(L4, Q3, 21st) is compared as a whole word instead. A story id like S4 never supplies the number 4.
+(L4, Q3, SOC2) and a version like 3.5.1 is compared as a whole word instead. A number with a short
+unit or ordinal stuck to it (40km, 100ms, 21st) is read as its leading number.
+A story id like S4 never supplies the number 4.
 """
 
 from __future__ import annotations
@@ -28,16 +30,19 @@ from dataclasses import dataclass
 
 STORY_LINE = re.compile(r"^\s*(?:[-*]\s*)?\[?(S\d+)\]?\s*[:.)\u2013\u2014-]\s*(.+?)\s*$")
 CITATION = re.compile(r"\[(S\d+)\]")
-# A number is a whole token: 94, 2.7, 1,200, 31400, .5, with an optional % or a single k/m/b/x after it.
-# It must not touch a letter, digit or underscore on either side, and must not be the tail of a longer
-# number ("5" in "3.5", "200" in "1,200"). So "21%", "$1,200", "(5)", "3.5x" and "5." at the end of a
-# sentence all count, but "L4", "S21", "2021" or "21st" do not supply the number 4 or 21.
+# A number is a whole token: 94, 2.7, 1,200, 31400, with an optional % or a short unit/ordinal of up to
+# three letters right after it (40km, 100ms, 21st, 3rd, 5bn, 3.5x), which is dropped. It must not touch a
+# letter, digit or underscore before it, and must not be the tail of a longer number ("5" in "3.5", "200"
+# in "1,200"). A leading dot is not part of the number: ".5" reads as 5. So "21%", "$1,200", "(5)" and
+# "5." at the end of a sentence all count, but "L4", "S21" and "2021" do not supply the number 4 or 21.
 # Thousands commas are only read as commas when followed by exactly three digits.
-_NUM = r"(?<!\w)(?<!\d\.)(?P<num>(?:\d{1,3}(?:,\d{3})+|\d+)(?:\.\d+)?)(?:%|[kKmMbBxX]?(?!\w))"
-# A word with both a letter and a digit in it (L4, S21, 21st, Q3, v1.2's "v1"). It is compared as a whole
-# word and never gives up its digits as a number.
+_NUM = r"(?<!\w)(?<!\d\.)(?P<num>(?:\d{1,3}(?:,\d{3})+|\d+)(?:\.\d+)?)(?:%|[A-Za-z]{0,3}(?!\w))"
+# A dotted version with three or more parts (3.5.1) is one word, compared whole, never read as 3.5.
+_VERSION = r"(?<!\w)(?<!\d\.)(?P<ver>\d+(?:\.\d+){2,})(?!\w)"
+# A word that starts with a letter (or has letters around digits) and has a digit in it: L4, S21, Q3, SOC2,
+# v3, 24x7. It is compared as a whole word and never gives up its digits as a number.
 _IDENT = r"(?<!\w)(?P<ident>(?=\w*\d)(?=\w*[^\W\d_])\w+)"
-TOKEN = re.compile(f"{_NUM}|{_IDENT}")
+TOKEN = re.compile(f"{_VERSION}|{_NUM}|{_IDENT}")
 SECTIONS = ("Fit", "Gaps", "Bullets", "Note", "Questions")
 NOTE_WORDS = (100, 140)  # "120 words" asked for; this is the tolerance
 
@@ -72,9 +77,15 @@ def numbers_in(text: str) -> set[str]:
 
 
 def identifiers_in(text: str) -> set[str]:
-    """Words that mix letters and digits (L4, S21, 21st), lower-cased. Their digits are not numbers."""
+    """Words that mix letters and digits (L4, S21, 24x7) and versions like 3.5.1, lower-cased.
+
+    Their digits are not numbers."""
     cleaned = CITATION.sub(" ", text)
-    return {m.group("ident").casefold() for m in TOKEN.finditer(cleaned) if m.group("ident")}
+    return {
+        (m.group("ident") or m.group("ver")).casefold()
+        for m in TOKEN.finditer(cleaned)
+        if m.group("ident") or m.group("ver")
+    }
 
 
 def parse_story_bank(text: str) -> StoryBank:

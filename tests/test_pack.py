@@ -7,6 +7,7 @@ from resume_pipeline.pack import (
     _reply_numbers,
     build_prompt,
     check_pack,
+    identifiers_in,
     numbers_in,
     parse_story_bank,
 )
@@ -150,7 +151,7 @@ def _bank_with(line):
         ("Joined in 2021 and shipped the Galaxy S21 portal.", "Done in 21 days.", "21"),
         ("Paid out $1,200 in credits.", "Paid 200 in credits.", "200"),
         ("Cut run time by 3.5 hours.", "Cut run time by 5 hours.", "5"),
-        ("Passed the 21st audit.", "Passed 21 audits.", "21"),
+        ("Passed the 21st audit.", "Passed 22 audits.", "22"),
     ],
 )
 def test_digits_hiding_inside_another_bank_token_do_not_pass(bank_line, reply_sentence, stray):
@@ -204,22 +205,51 @@ def test_numbers_in_reads_whole_tokens_only():
     assert numbers_in("$1,200 and 3.5x and (5) and 5.") == {"1200", "3.5", "5"}
     assert numbers_in("3.5") == {"3.5"}
     assert numbers_in("1,2000") == {"1", "2000"}
-    assert numbers_in("21st 40km 5G") == set()
+    assert numbers_in("21st 40km 5G 10days") == {"21", "40", "5"}
     assert numbers_in("on 3-5 days, 10/10") == {"3", "5", "10"}
 
 
-@pytest.mark.parametrize("digits", ["4", "21", "200", "93", "7", "1200"])
-@pytest.mark.parametrize("wrap", ["L{}", "S{}", "{}th", "x{}y", "v{}.1", "{}abc", "2{}", "{}0", "A{}B"])
+@pytest.mark.parametrize("digits", ["4", "21", "200", "77", "7", "1200"])
+@pytest.mark.parametrize("wrap", ["L{}", "S{}", "x{}y", "v{}.1", "SOC{}", "A{}B", "{}x7"])
 def test_a_number_inside_an_alphanumeric_token_never_supplies_that_number(digits, wrap):
     token = wrap.format(digits)
-    if token.isdigit():  # "2{}" and "{}0" are plain bigger numbers; they are checked below
-        assert digits not in numbers_in(f"Reached {token} today")
-        return
     assert digits not in numbers_in(f"Reached {token} today")
     bank = _bank_with(f"Reached {token} today.")
     problems = check_pack(reply_with(note_extra=f"I did {digits} things. "), bank)
-    if digits not in BANK_TEXT.replace(",", ""):
-        assert any(re.search(rf"(?<![\d,]){digits}\b", p) and "not in the story bank" in p for p in problems), (
-            token,
-            problems,
-        )
+    assert digits not in bank.numbers()
+    assert any(re.search(rf"(?<![\d,]){digits}\b", p) and "not in the story bank" in p for p in problems), (
+        token,
+        problems,
+    )
+
+
+@pytest.mark.parametrize(
+    ("bank_line", "reply_sentence"),
+    [
+        ("Drove 40 km a day.", "Drove 40km a day."),
+        ("Drove 40km a day.", "Drove 40 km a day."),
+        ("Cut latency to 100 ms.", "Cut latency to 100ms."),
+        ("Cut latency to 100ms.", "Cut latency to 100 ms."),
+        ("Served 21 accounts.", "The 21st account."),
+        ("Placed 3rd of 3.", "Placed 3 of 3."),
+        ("Used 5mm and 5bn and 5MM.", "5 5 5."),
+        ("Shipped 3.5.1 to prod.", "Shipped 3.5.1 to prod."),
+        ("Moved to SOC2 and v3.", "Moved to SOC2 and v3."),
+    ],
+)
+def test_digit_first_units_and_whole_versions_pass(bank_line, reply_sentence):
+    problems = check_pack(reply_with(note_extra=reply_sentence + " "), _bank_with(bank_line))
+    assert not any("not in the story bank" in p for p in problems), problems
+
+
+def test_versions_are_one_word_and_letter_first_words_keep_their_digits():
+    assert numbers_in("version 3.5.1 and 3.5") == {"3.5"}
+    assert identifiers_in("version 3.5.1") == {"3.5.1"}
+    assert numbers_in("40km 100ms 21st 3rd 5mm 5bn 5MM") == {"40", "100", "21", "3", "5"}
+    assert numbers_in("L4 S21 Q3 SOC2 v3 24x7") == set()
+    assert identifiers_in("L4 S21 Q3 SOC2 v3 24x7") == {"l4", "s21", "q3", "soc2", "v3", "24x7"}
+
+
+def test_a_version_in_the_bank_does_not_supply_its_first_two_parts():
+    problems = check_pack(reply_with(note_extra="I did 3.5 things. "), _bank_with("Shipped 3.5.1 to prod."))
+    assert any("3.5" in p and "not in the story bank" in p for p in problems)
