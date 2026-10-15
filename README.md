@@ -23,7 +23,7 @@ Job alerts arrive as a list every morning. Reading every posting to find the few
 - **Any CSV layout works.** The rubric maps your column names to the fields the tool needs.
 - **The rules are a YAML file.** Title families with weights, must-haves, nice-to-haves, knockouts, a salary floor, location and remote rules, and a company whitelist that skips the salary floor.
 - **`pack` builds an application pack prompt.** From one posting and your story bank, it writes a prompt you paste into any assistant. It asks for fit with reasons, gaps stated plainly, five bullets, a note of about 120 words and three questions.
-- **`pack --check` rejects invented experience.** Every bullet must cite a story-bank line like `[S2]`, and every number in the reply, in any section, must appear in the story bank. A reply that breaks either rule is rejected with a plain message. It compares digits and number words, not units, ordinals or non-Latin numerals, so read the pack before you send it.
+- **`pack --check` rejects invented experience.** Every bullet must cite a story-bank line like `[S2]`, and every number in the reply, in any section, must appear in the story bank. A reply that breaks either rule is rejected with a plain message. It compares whole-token digits and number words, not units, ordinals or non-Latin numerals, so read the pack before you send it.
 
 ![The report on a phone, with the same shortlist](docs/screenshots/report-phone.png)
 
@@ -124,6 +124,7 @@ Want the guided tour? [docs/CTO-NOTES.md](docs/CTO-NOTES.md) explains every idea
 
 - **The guardrail caught my own sample.** The first hand-written sample reply asked "what does a good first 90 days look like". The number 90 is not in the story bank, so `pack --check` rejected it. I changed the question to "first quarter". That is the rule working on the person who wrote it.
 - **List numbers looked like experience.** The same check flagged "1", "2" and "3" in the questions list, because it was reading the list markers as numbers. A test now covers it.
+- **A number passed because the same digits were hiding somewhere else.** The check looked for digits, so a reply that said "level 4" passed when my story bank only had "L4", and "21" passed because the bank had "2021". It now reads a number as a whole token on both sides, so letters or other digits stuck to it do not count. "L4", "S21" and "1,200" no longer give up a 4, a 21 or a 200. Tests cover each case.
 - **A spreadsheet reads a leading plus as a formula.** The first `ranked.csv` had reasons starting with `+4 title family...`, and every row came out with a stray apostrophe, because the formula guard I'd added was catching my own text. The reasons cell now starts with "Reasons:", and only lead text that starts with `=`, `+`, `-` or `@` gets the apostrophe.
 - **A tie test that tested the wrong thing.** I first wrote the tie-break test as "ties keep the order they arrive in". The rule is "ties keep the order of the CSV", which is the row number, whatever order the code receives them. The test now shuffles the input.
 

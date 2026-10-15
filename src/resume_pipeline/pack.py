@@ -15,6 +15,10 @@ What it cannot check: units (93% renewal can become "93 accounts" and still pass
 digits are compared), wording that sounds more senior than the line it came from, or a skill the
 story bank never mentions. Ordinals ("first", "third") and non-Latin numerals such as 三 are not
 checked. Read the pack before you send it.
+
+Numbers are matched as whole tokens, on both sides. The 4 in "L4", the 21 in "S21" or "2021", the 200 in
+"1,200" and the 5 in "3.5" never count as the number 4, 21, 200 or 5. A word that mixes letters and digits
+(L4, Q3, 21st) is compared as a whole word instead. A story id like S4 never supplies the number 4.
 """
 
 from __future__ import annotations
@@ -24,8 +28,16 @@ from dataclasses import dataclass
 
 STORY_LINE = re.compile(r"^\s*(?:[-*]\s*)?\[?(S\d+)\]?\s*[:.)\u2013\u2014-]\s*(.+?)\s*$")
 CITATION = re.compile(r"\[(S\d+)\]")
-# 94, 2.7, 1,200, 31400. A trailing % or M or k is dropped on purpose.
-NUMBER = re.compile(r"\d[\d,]*(?:\.\d+)?")
+# A number is a whole token: 94, 2.7, 1,200, 31400, .5, with an optional % or a single k/m/b/x after it.
+# It must not touch a letter, digit or underscore on either side, and must not be the tail of a longer
+# number ("5" in "3.5", "200" in "1,200"). So "21%", "$1,200", "(5)", "3.5x" and "5." at the end of a
+# sentence all count, but "L4", "S21", "2021" or "21st" do not supply the number 4 or 21.
+# Thousands commas are only read as commas when followed by exactly three digits.
+_NUM = r"(?<!\w)(?<!\d\.)(?P<num>(?:\d{1,3}(?:,\d{3})+|\d+)(?:\.\d+)?)(?:%|[kKmMbBxX]?(?!\w))"
+# A word with both a letter and a digit in it (L4, S21, 21st, Q3, v1.2's "v1"). It is compared as a whole
+# word and never gives up its digits as a number.
+_IDENT = r"(?<!\w)(?P<ident>(?=\w*\d)(?=\w*[^\W\d_])\w+)"
+TOKEN = re.compile(f"{_NUM}|{_IDENT}")
 SECTIONS = ("Fit", "Gaps", "Bullets", "Note", "Questions")
 NOTE_WORDS = (100, 140)  # "120 words" asked for; this is the tolerance
 
@@ -45,11 +57,24 @@ class StoryBank:
             found |= numbers_in(self.lines.get(k, ""))
         return found
 
+    def idents(self, ids: list[str] | None = None) -> set[str]:
+        keys = ids if ids is not None else list(self.lines)
+        found: set[str] = set()
+        for k in keys:
+            found |= identifiers_in(self.lines.get(k, ""))
+        return found
+
 
 def numbers_in(text: str) -> set[str]:
-    """Every number in `text`, commas removed, citations like [S2] ignored."""
+    """Every whole-token number in `text`, commas removed, citations like [S2] ignored."""
     cleaned = CITATION.sub(" ", text)
-    return {m.group(0).replace(",", "").rstrip(".") for m in NUMBER.finditer(cleaned)}
+    return {m.group("num").replace(",", "") for m in TOKEN.finditer(cleaned) if m.group("num")}
+
+
+def identifiers_in(text: str) -> set[str]:
+    """Words that mix letters and digits (L4, S21, 21st), lower-cased. Their digits are not numbers."""
+    cleaned = CITATION.sub(" ", text)
+    return {m.group("ident").casefold() for m in TOKEN.finditer(cleaned) if m.group("ident")}
 
 
 def parse_story_bank(text: str) -> StoryBank:
@@ -157,6 +182,11 @@ def _reply_numbers(reply: str) -> set[str]:
     return found
 
 
+def _reply_idents(reply: str, bank: StoryBank) -> set[str]:
+    """Letter-and-digit words in the reply, except a bare mention of a real story id like S4."""
+    return {w for w in identifiers_in(reply) if w.upper() not in bank.lines}
+
+
 def _word_numbers(text: str) -> set[str]:
     return {m.group(0).casefold() for m in WORD_NUMBERS.finditer(text)}
 
@@ -187,7 +217,7 @@ def check_pack(reply: str, bank: StoryBank) -> list[str]:
             problems.append(f"Bullet {i} is only a citation.")
         if [c for c in cited if c not in bank.lines]:
             continue  # already reported above
-        extra = numbers_in(b) - bank.numbers(cited)
+        extra = (numbers_in(b) - bank.numbers(cited)) | (_reply_idents(b, bank) - bank.idents(cited))
         if extra:
             problems.append(
                 f"Bullet {i} has {', '.join(sorted(extra))}, not in the line it cites ({', '.join(cited)})."
@@ -201,7 +231,7 @@ def check_pack(reply: str, bank: StoryBank) -> list[str]:
     if not NOTE_WORDS[0] <= words <= NOTE_WORDS[1]:
         problems.append(f"Note: {words} words; aim for about 120 ({NOTE_WORDS[0]} to {NOTE_WORDS[1]}).")
 
-    invented = _reply_numbers(reply) - bank.numbers()
+    invented = (_reply_numbers(reply) - bank.numbers()) | (_reply_idents(reply, bank) - bank.idents())
     if invented:
         problems.append(
             f"The reply has number {', '.join(sorted(invented))}, which is not in the story bank. "

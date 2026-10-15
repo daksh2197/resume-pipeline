@@ -1,3 +1,5 @@
+import re
+
 import pytest
 
 from resume_pipeline.pack import (
@@ -131,3 +133,93 @@ def test_suffixed_and_glyph_numbers_are_caught(bank):
 
 def test_a_heading_with_a_colon_is_fine(bank):
     assert check_pack(GOOD.replace("## Fit", "## Fit:"), bank) == []
+
+
+# --- numbers must match as whole tokens, not as digits hiding inside another token -----------------
+
+
+def _bank_with(line):
+    return parse_story_bank(BANK_TEXT + f"\nS6: {line}\n")
+
+
+@pytest.mark.parametrize(
+    ("bank_line", "reply_sentence", "stray"),
+    [
+        ("Moved from L4 to L5 in the support ladder.", "I reached level 4.", "4"),
+        ("Moved from L4 to L5 in the support ladder.", "I reached level 5.", "5"),
+        ("Joined in 2021 and shipped the Galaxy S21 portal.", "Done in 21 days.", "21"),
+        ("Paid out $1,200 in credits.", "Paid 200 in credits.", "200"),
+        ("Cut run time by 3.5 hours.", "Cut run time by 5 hours.", "5"),
+        ("Passed the 21st audit.", "Passed 21 audits.", "21"),
+    ],
+)
+def test_digits_hiding_inside_another_bank_token_do_not_pass(bank_line, reply_sentence, stray):
+    bank = _bank_with(bank_line)
+    problems = check_pack(reply_with(note_extra=reply_sentence + " "), bank)
+    assert any(re.search(rf"\b{stray}\b", p) and "not in the story bank" in p for p in problems), problems
+
+
+def test_a_story_id_never_supplies_its_number(bank):
+    # S4 is a real id, but the number 4 is not in the bank on its own.
+    small = parse_story_bank("S4: Did a thing.\nS1: Did two things.")
+    assert "4" not in small.numbers()
+    assert "4" in _reply_numbers("I did 4 things.") - small.numbers()
+    assert numbers_in("S4: see S21 and [S9]") == set()
+
+
+def test_a_bare_mention_of_a_real_story_id_is_fine(bank):
+    assert check_pack(reply_with(note_extra="See S4 for detail. "), bank) == []
+
+
+@pytest.mark.parametrize(
+    ("bank_line", "reply_sentence"),
+    [
+        ("Hit a 21% lift.", "A 21% lift."),
+        ("Hit a 21% lift.", "Up 21 percent: 21."),
+        ("Saved $1,200 a month.", "Saved $1,200 a month."),
+        ("Saved $1,200 a month.", "Saved 1200 a month."),
+        ("Saved 1200 a month.", "Saved $1,200."),
+        ("Cut cost by 3.5x.", "A 3.5x cut."),
+        ("Cut cost by 3.5x.", "Cut cost (3.5)."),
+        ("Rolled out to 5 teams.", "Rolled out to 5."),
+        ("Rolled out to 5 teams.", "Teams (5), done."),
+        ("Raised $2.7M.", "Raised 2.7M."),
+        ("Got promoted to L4 in a year.", "I was L4."),
+        ("Got promoted to L4 in a year.", "I was l4."),
+    ],
+)
+def test_whole_token_numbers_still_match(bank_line, reply_sentence):
+    bank = _bank_with(bank_line)
+    problems = check_pack(reply_with(note_extra=reply_sentence + " "), bank)
+    assert not any("not in the story bank" in p for p in problems), problems
+
+
+def test_a_letter_digit_word_in_the_reply_must_be_in_the_bank(bank):
+    problems = check_pack(reply_with(note_extra="I reached L7. "), bank)
+    assert any("l7" in p for p in problems)
+
+
+def test_numbers_in_reads_whole_tokens_only():
+    assert numbers_in("L4 S21 2021") == {"2021"}
+    assert numbers_in("$1,200 and 3.5x and (5) and 5.") == {"1200", "3.5", "5"}
+    assert numbers_in("3.5") == {"3.5"}
+    assert numbers_in("1,2000") == {"1", "2000"}
+    assert numbers_in("21st 40km 5G") == set()
+    assert numbers_in("on 3-5 days, 10/10") == {"3", "5", "10"}
+
+
+@pytest.mark.parametrize("digits", ["4", "21", "200", "93", "7", "1200"])
+@pytest.mark.parametrize("wrap", ["L{}", "S{}", "{}th", "x{}y", "v{}.1", "{}abc", "2{}", "{}0", "A{}B"])
+def test_a_number_inside_an_alphanumeric_token_never_supplies_that_number(digits, wrap):
+    token = wrap.format(digits)
+    if token.isdigit():  # "2{}" and "{}0" are plain bigger numbers; they are checked below
+        assert digits not in numbers_in(f"Reached {token} today")
+        return
+    assert digits not in numbers_in(f"Reached {token} today")
+    bank = _bank_with(f"Reached {token} today.")
+    problems = check_pack(reply_with(note_extra=f"I did {digits} things. "), bank)
+    if digits not in BANK_TEXT.replace(",", ""):
+        assert any(re.search(rf"(?<![\d,]){digits}\b", p) and "not in the story bank" in p for p in problems), (
+            token,
+            problems,
+        )
