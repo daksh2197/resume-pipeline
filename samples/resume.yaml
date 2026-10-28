@@ -1,0 +1,21 @@
+# SAMPLE BASE RÉSUMÉ. Invented for the demo. Replace with your own.
+# Everything here is fixed: the model never writes your name, titles, employers or dates.
+# Each role lists the story-bank lines that belong to it. A bullet under a role may cite only those.
+name: Sam Sample
+contact: [sam@example.com, example.com, "Calgary, AB"]
+roles:
+  - id: northwind
+    title: Technical Account Manager
+    org: Northwind Sample Co.
+    where: Remote
+    dates: 2021 – present
+    lines: [S1, S2, S4]
+  - id: cedar
+    title: Support Engineer
+    org: Cedar Sample Labs
+    where: Calgary
+    dates: 2018 – 2021
+    lines: [S3, S5]
+education:
+  - BSc, Computer Science, Sample University
+skills: [SQL, Python, cloud migration, executive briefings]
