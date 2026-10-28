@@ -10,6 +10,7 @@ dependencies = ["pyyaml>=6.0"]
 [project.scripts]
 screen = "resume_pipeline.cli:screen_main"
 pack = "resume_pipeline.cli:pack_main"
+tailor = "resume_pipeline.cli:tailor_main"
 
 [dependency-groups]
 dev = ["pytest>=8", "ruff>=0.6"]

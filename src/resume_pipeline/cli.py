@@ -1,4 +1,5 @@
-"""Command line: `screen` ranks a CSV, `pack` builds or checks an application pack."""
+"""Command line: `screen` ranks a CSV, `pack` builds or checks an application pack, `tailor` builds a résumé
+and cover letter for one posting."""
 
 from __future__ import annotations
 
@@ -12,6 +13,16 @@ from .pack import PackError, build_prompt, check_pack, parse_story_bank
 from .report import build_report, ranked_csv
 from .rubric import RubricError, load_rubric
 from .scoring import score_all
+from .tailor import (
+    TailorError,
+    build_tailor_prompt,
+    check_tailored,
+    parse_resume,
+    rank_lines,
+    render_html,
+    render_letter,
+    render_markdown,
+)
 from .textio import read_text
 
 
@@ -100,4 +111,72 @@ def pack_main(argv: list[str] | None = None) -> int:
         return _fail(str(err))
     print(f"Wrote {args.out}. Paste it into any assistant, save the reply, then run:")
     print(f"  uv run pack --story-bank {args.story_bank} --check reply.md")
+    return 0
+
+
+def tailor_main(argv: list[str] | None = None) -> int:
+    p = argparse.ArgumentParser(
+        prog="tailor",
+        description="Tailor your résumé and cover letter to one posting, using only your story bank.",
+    )
+    p.add_argument("posting", nargs="?", help="text file with the job description (to build a prompt)")
+    p.add_argument("--story-bank", required=True, help="story-bank.md with lines like `S1: ...`")
+    p.add_argument("--resume", required=True, help="resume.yaml: name, contact, roles and their story lines")
+    p.add_argument("--out", default="tailored", help="folder for the prompt or the rendered files")
+    p.add_argument("--check", metavar="REPLY", help="check a reply file, write nothing")
+    p.add_argument("--render", metavar="REPLY", help="check a reply, then write resume.html/.md and cover-letter.md")
+    args = p.parse_args(argv)
+
+    try:
+        bank = parse_story_bank(read_text(args.story_bank))
+        base = parse_resume(read_text(args.resume), bank)
+    except OSError as err:
+        return _fail(f"cannot read {err.filename}: {err.strerror or err}")
+    except (PackError, TailorError) as err:
+        return _fail(str(err))
+
+    out = Path(args.out)
+    reply_file = args.render or args.check
+    if reply_file:
+        try:
+            reply = read_text(reply_file)
+        except OSError as err:
+            return _fail(f"cannot read the reply: {err.strerror or err}")
+        problems, tailored = check_tailored(reply, bank, base)
+        if problems:
+            print("Reply rejected:", file=sys.stderr)
+            for line in problems:
+                print(f"  - {line}", file=sys.stderr)
+            return 1
+        print("Reply passed: every bullet cites its own role's story lines and every number is in the bank.")
+        if not args.render:
+            return 0
+        try:
+            out.mkdir(parents=True, exist_ok=True)
+            (out / "resume.html").write_text(render_html(tailored, bank, base), encoding="utf-8")
+            (out / "resume.md").write_text(render_markdown(tailored, bank, base), encoding="utf-8")
+            (out / "cover-letter.md").write_text(render_letter(tailored, base), encoding="utf-8")
+        except OSError as err:
+            return _fail(f"cannot write to {out}: {err.strerror or err}")
+        print(f"Wrote {out / 'resume.html'} (open it, print to PDF), {out / 'resume.md'} and {out / 'cover-letter.md'}")
+        return 0
+
+    if not args.posting:
+        return _fail("give a posting file to build a prompt, or use --check / --render REPLY")
+    try:
+        posting = read_text(args.posting)
+        prompt = build_tailor_prompt(posting, bank, base)
+        out.mkdir(parents=True, exist_ok=True)
+        (out / "prompt.md").write_text(prompt, encoding="utf-8")
+    except OSError as err:
+        return _fail(f"{err.strerror or err}")
+    except PackError as err:
+        return _fail(str(err))
+    matches, missing = rank_lines(posting, bank)
+    top = ", ".join(m.line for m in matches[:5] if m.shared) or "none"
+    print(f"Best-matching story lines: {top}")
+    if missing:
+        print(f"Posting words your bank never mentions: {', '.join(missing[:10])}")
+    print(f"Wrote {out / 'prompt.md'}. Paste it into any assistant, save the reply, then run:")
+    print(f"  uv run tailor --story-bank {args.story_bank} --resume {args.resume} --render reply.md --out {out}")
     return 0

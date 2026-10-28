@@ -23,6 +23,7 @@ Job alerts arrive as a list every morning. Reading every posting to find the few
 - **Any CSV layout works.** The rubric maps your column names to the fields the tool needs.
 - **The rules are a YAML file.** Title families with weights, must-haves, nice-to-haves, knockouts, a salary floor, location and remote rules, and a company whitelist that skips the salary floor.
 - **`pack` builds an application pack prompt.** From one posting and your story bank, it writes a prompt you paste into any assistant. It asks for fit with reasons, gaps stated plainly, five bullets, a note of about 120 words and three questions.
+- **`tailor` turns one posting into a résumé and a cover letter.** It ranks your story-bank lines by the words they share with the posting, lists the posting words your bank never mentions, and writes a prompt. `tailor --render reply.md` checks the answer, then writes `resume.html` (print it to PDF), `resume.md` and `cover-letter.md`. Your name, titles, employers and dates come from your own `resume.yaml`, never from the model, and a bullet under a job may only cite that job's story lines.
 - **`pack --check` rejects invented experience.** Every bullet must cite a story-bank line like `[S2]`, and every number in the reply, in any section, must appear in the story bank. A reply that breaks either rule is rejected with a plain message. It compares whole-token digits and number words, not units, ordinals or non-Latin numerals, so read the pack before you send it.
 
 ![The report on a phone, with the same shortlist](docs/screenshots/report-phone.png)
@@ -78,6 +79,17 @@ uv run pack posting.txt --story-bank story-bank.md       # writes prompt.md
 uv run pack --story-bank story-bank.md --check reply.md  # passes, or says what is wrong
 ```
 
+A tailored résumé and cover letter for one posting, same rules:
+
+```bash
+cp samples/resume.yaml resume.yaml              # your name, contact line, jobs, and which S-lines belong to each
+uv run tailor posting.txt --story-bank story-bank.md --resume resume.yaml   # writes tailored/prompt.md
+# paste it into any assistant, save its answer as reply.md
+uv run tailor --story-bank story-bank.md --resume resume.yaml --render reply.md   # checks, then writes tailored/
+```
+
+`samples/sample-tailor-reply.md` passes `tailor --check`. A reply that fails the check is never rendered.
+
 `samples/sample-reply.md` is a hand-written reply that passes the check. Your real `jobs.csv`, `rubric.yaml`, `story-bank.md`, `posting.txt` and packs are ignored by git (see `.gitignore`). Only `samples/` is committed, and everything in it is invented.
 
 An n8n workflow in [`n8n/`](n8n/) runs `screen` and returns the top ten. I imported it into n8n 2.35.7 and ran it. The details, and what I did not check, are in [n8n/README.md](n8n/README.md).
@@ -106,8 +118,9 @@ src/resume_pipeline/
   scoring.py    the checks above. Start here.
   report.py     ranked.csv and the HTML report
   pack.py       builds the application-pack prompt and checks a reply
+  tailor.py     ranks story lines against a posting, checks a tailored reply, renders the résumé and letter
   textio.py     reads text files saved as UTF-8 or old Windows encodings
-  cli.py        the two commands
+  cli.py        the three commands
   assets/       brand.css and the three typefaces (SIL Open Font License)
 samples/        invented leads, rubric, story bank, posting and reply
 tests/          the tests, plus tests/golden/report.html
@@ -126,6 +139,8 @@ Want the guided tour? [docs/CTO-NOTES.md](docs/CTO-NOTES.md) explains every idea
 - **List numbers looked like experience.** The same check flagged "1", "2" and "3" in the questions list, because it was reading the list markers as numbers. A test now covers it.
 - **A number passed because the same digits were hiding somewhere else.** The check looked for digits, so a reply that said "level 4" passed when my story bank only had "L4", and "21" passed because the bank had "2021". It now reads a number as a whole token on both sides, so letters or other digits stuck to it do not count. "L4", "S21" and "1,200" no longer give up a 4, a 21 or a 200. Tests cover each case. Write units, versions and IDs the way the story bank does (SOC2 not SOC 2, 24x7 not 24/7), because those are compared as written.
 - **A spreadsheet reads a leading plus as a formula.** The first `ranked.csv` had reasons starting with `+4 title family...`, and every row came out with a stray apostrophe, because the formula guard I'd added was catching my own text. The reasons cell now starts with "Reasons:", and only lead text that starts with `=`, `+`, `-` or `@` gets the apostrophe.
+- **The tailor check caught "one".** The first real cover letter said "One honest gap" and "the job was the one you describe". Both were rejected, because "one" is a number word that is not in the story bank. Rewording took a minute. The check stays strict on purpose.
+- **A link outranked the work.** The first ranking put a GitHub-portfolio line first for a dealership role, because the posting's link and header shared words with it. Links are now ignored, and a shared word counts as often as the posting uses it.
 - **A tie test that tested the wrong thing.** I first wrote the tie-break test as "ties keep the order they arrive in". The rule is "ties keep the order of the CSV", which is the row number, whatever order the code receives them. The test now shuffles the input.
 
 ## How this was built
